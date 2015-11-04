@@ -871,41 +871,43 @@ module.exports = function(config) {
     function flattenKeys(keys, prefix, numDocs) {
         var result = [];
 
-        for(var i=0; i<keys.sorted_keys.length; i++) {
-            var hasNestedKeys;
-            if (keys.keys[keys.sorted_keys[i]].keys == null) {
-                hasNestedKeys = false;
-            }
-            else {
-                for(var key in keys.keys[keys.sorted_keys[i]].keys) {
-                    hasNestedKeys = true;
-                    break;
-                }
-            }
-
-            // Save the field if it's a primitive (at least once) or if it's an empty object
-            if ((keys.keys[keys.sorted_keys[i]].primitiveValueCount > 0) || (hasNestedKeys === false)) {
-                result.push(prefix.concat(keys.sorted_keys[i]))
-            }
-            else {
-                var count = 0;
-                for(var type in keys.keys[keys.sorted_keys[i]].type) {
-                    count += keys.keys[keys.sorted_keys[i]].type[type]
-                }
-                if (typeof keys.keys[keys.sorted_keys[i]].primitiveCount === 'number') {
-                    count += keys.keys[keys.sorted_keys[i]].primitiveCount;
-                }
-
-                if (count < numDocs) {
-                    result.push(prefix.concat(keys.sorted_keys[i]))
-                }
-            }
-
-            // Recursively add more fields
-            if ((keys.keys[keys.sorted_keys[i]].type.object != null)
-                && (keys.keys[keys.sorted_keys[i]].type.object > 0)) {
-                result.push.apply(result, flattenKeys(keys.keys[keys.sorted_keys[i]], prefix.concat([keys.sorted_keys[i]]), numDocs))
-            }
+        if(keys.sorted_keys){
+          for(var i=0; i<keys.sorted_keys.length; i++) {
+              var hasNestedKeys;
+              if (keys.keys[keys.sorted_keys[i]].keys == null) {
+                  hasNestedKeys = false;
+              }
+              else {
+                  for(var key in keys.keys[keys.sorted_keys[i]].keys) {
+                      hasNestedKeys = true;
+                      break;
+                  }
+              }
+  
+              // Save the field if it's a primitive (at least once) or if it's an empty object
+              if ((keys.keys[keys.sorted_keys[i]].primitiveValueCount > 0) || (hasNestedKeys === false)) {
+                  result.push(prefix.concat(keys.sorted_keys[i]))
+              }
+              else {
+                  var count = 0;
+                  for(var type in keys.keys[keys.sorted_keys[i]].type) {
+                      count += keys.keys[keys.sorted_keys[i]].type[type]
+                  }
+                  if (typeof keys.keys[keys.sorted_keys[i]].primitiveCount === 'number') {
+                      count += keys.keys[keys.sorted_keys[i]].primitiveCount;
+                  }
+  
+                  if (count < numDocs) {
+                      result.push(prefix.concat(keys.sorted_keys[i]))
+                  }
+              }
+  
+              // Recursively add more fields
+              if ((keys.keys[keys.sorted_keys[i]].type.object != null)
+                  && (keys.keys[keys.sorted_keys[i]].type.object > 0)) {
+                  result.push.apply(result, flattenKeys(keys.keys[keys.sorted_keys[i]], prefix.concat([keys.sorted_keys[i]]), numDocs))
+              }
+          }
         }
         return result
     }
@@ -913,22 +915,24 @@ module.exports = function(config) {
         var result = [];
         prefix = prefix || []
 
-        for(var i=0; i<keys.sorted_keys.length; i++) {
-            if ((keys.keys[keys.sorted_keys[i]].type.object != null)
-                && (keys.keys[keys.sorted_keys[i]].type.object > 0)) {
-
-                result.push({
-                    field: keys.sorted_keys[i],
-                    prefix: prefix,
-                    nested: nestedKeys( keys.keys[keys.sorted_keys[i]], prefix.concat([keys.sorted_keys[i]]))
-                })
-            }
-            else {
-                result.push({
-                    field: keys.sorted_keys[i],
-                    prefix: prefix
-                })
-            }
+        if(keys.sorted_keys){
+          for(var i=0; i<keys.sorted_keys.length; i++) {
+              if ((keys.keys[keys.sorted_keys[i]].type.object != null)
+                  && (keys.keys[keys.sorted_keys[i]].type.object > 0)) {
+  
+                  result.push({
+                      field: keys.sorted_keys[i],
+                      prefix: prefix,
+                      nested: nestedKeys( keys.keys[keys.sorted_keys[i]], prefix.concat([keys.sorted_keys[i]]))
+                  })
+              }
+              else {
+                  result.push({
+                      field: keys.sorted_keys[i],
+                      prefix: prefix
+                  })
+              }
+          }
         }
         return result
     }
