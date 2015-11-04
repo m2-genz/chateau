@@ -8,3 +8,5 @@ exports.expressPort = 3000;    // Port used by express
 exports.debug = true;          // Debug mode
 exports.network = '127.0.0.1'  // Network the node app will run on
 
+exports.isReadOnlyMode = false;
+exports.filterDB = ".*";

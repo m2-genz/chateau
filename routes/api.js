@@ -45,7 +45,9 @@ module.exports = function(config) {
             })
         }
         else {
-            r.dbList().forEach(function(db) {
+            r.dbList().filter(function(dbName) {
+              return dbName.match(config.filterDB || '.*');
+            }).forEach(function(db) {
                 return r.expr({
                     x: [{
                         db: db,
@@ -72,7 +74,9 @@ module.exports = function(config) {
         })
     }
     exports.databases = function (req, res) {
-        r.dbList().run( connection, {timeFormat: 'raw'}, function(error, dbs) {
+        r.dbList().filter(function(dbName) {
+              return dbName.match(config.filterDB || '.*');
+            }).run( connection, {timeFormat: 'raw'}, function(error, dbs) {
             if (error) handleError(error);
             res.json({
                 error: error,

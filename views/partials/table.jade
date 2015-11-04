@@ -1,11 +1,12 @@
 div.table_view(ng-switch="", on="status")
     div.actions(ng-switch="", on="display == -1")
+      unless isReadOnlyMode
         a(href="doc/add/{{db}}/{{table}}") Add a document
         a(href="field/add/{{db}}/{{table}}") Add a field
-        a.meta_action(href="export/{{db}}/{{table}}") Export
-        a.meta_action(href="import/{{db}}/{{table}}") Import
         a.meta_action(href="empty/{{db}}/{{table}}") Empty
         a.meta_action(href="delete/table/{{db}}/{{table}}") Delete this table
+        a.meta_action(href="import/{{db}}/{{table}}") Import
+      a.meta_action(href="export/{{db}}/{{table}}") Export
 
     div.alert.hidden
         a.close(href="#", ng-click="hide($event)") ×
@@ -54,10 +55,11 @@ div.table_view(ng-switch="", on="status")
                         div.field_container(ng-mousedown="stopPropagation($event)")
                             span.field_span {{field.name}}
                             div.center_edit_container
-                                a(ng-click="renameFieldConfirm($index)")
-                                    i.icon-edit.center_edit
-                                a(ng-click="deleteFieldConfirm($index)")
-                                    i.icon-trash.center_edit
+                                unless isReadOnlyMode
+                                  a(ng-click="renameFieldConfirm($index)")
+                                      i.icon-edit.center_edit
+                                  a(ng-click="deleteFieldConfirm($index)")
+                                      i.icon-trash.center_edit
                                 a(href="table/{{db}}/{{table}}/0/{{limit}}/{{field.name}}/asc")
                                     i.icon-arrow-up.center_edit
                                 a(href="table/{{db}}/{{table}}/0/{{limit}}/{{field.name}}/desc")
@@ -65,26 +67,27 @@ div.table_view(ng-switch="", on="status")
 
 
 
-             tr(ng-show="changeField == true")
-                th.op(colspan="{{fields.length+1}}", ng-switch="", on="operation")
-                    div.confirm_delete.alert.no_border_top(ng-switch-when="delete")
-                        h3.alert_title Delete a field
-                        p Are you sure you want to delete the field
-                            em  {{fieldToChangeStr}}
-                            |  for
-                            strong  all
-                            |  documents ?
-                        div.button_container
-                            button.float.btn(ng-click='cancel()') Cancel
-                            button.float.btn(ng-click='deleteField()') Delete
-                    div.update_form_container.alert.no_border_top(ng-switch-when="rename")
-                        h3.alert_title Rename the field {{fieldToChangeStr}}
-                        div.doc_form_container
-                        input(type="text", name="newFieldName", class="newFieldName", ng-model="newFieldName", ng-enter="renameField")
-
-                        div.button_container
-                            button.float.btn(ng-click='cancel()') Cancel
-                            button.float.btn(ng-click='renameField()') Update
+             unless isReadOnlyMode
+                tr(ng-show="changeField == true")
+                    th.op(colspan="{{fields.length+1}}", ng-switch="", on="operation")
+                        div.confirm_delete.alert.no_border_top(ng-switch-when="delete")
+                            h3.alert_title Delete a field
+                            p Are you sure you want to delete the field
+                                em  {{fieldToChangeStr}}
+                                |  for
+                                strong  all
+                                |  documents ?
+                            div.button_container
+                                button.float.btn(ng-click='cancel()') Cancel
+                                button.float.btn(ng-click='deleteField()') Delete
+                        div.update_form_container.alert.no_border_top(ng-switch-when="rename")
+                            h3.alert_title Rename the field {{fieldToChangeStr}}
+                            div.doc_form_container
+                            input(type="text", name="newFieldName", class="newFieldName", ng-model="newFieldName", ng-enter="renameField")
+    
+                            div.button_container
+                                button.float.btn(ng-click='cancel()') Cancel
+                                button.float.btn(ng-click='renameField()') Update
 
                                    
             tbody(ng-repeat="document in flattened_docs", ng-switch="", on="display == $index")
@@ -92,28 +95,32 @@ div.table_view(ng-switch="", on="status")
                     td.index_cell
                         div.expand_vertical(ng-mousedown="resizeVertical($index, $event)")
                             div.field_container(ng-mousedown="stopPropagation($event)")
-                                span.to_hide {{$index+skip}}
-                                a(ng-click="updateTrigger($index)")
-                                    i.icon-edit.float_edit
-                                a(ng-click="deleteTrigger($index)")
-                                    i.icon-trash.float_edit
+                                if isReadOnlyMode
+                                  span {{$index+skip}}
+                                unless isReadOnlyMode
+                                  span.to_hide {{$index+skip}}
+                                  a(ng-click="updateTrigger($index)")
+                                      i.icon-edit.float_edit
+                                  a(ng-click="deleteTrigger($index)")
+                                      i.icon-trash.float_edit
                     td.value_td(ng-repeat="field in document", class="col-{{$index}}")
                         div.value_container(class="{{field.type}}") {{formatValue(field.value)}}
-                tr(ng-switch-when="true")
-                    td.op(colspan="{{document.length+1}}", class="op-{{$index}}", ng-switch="", on="operation")
-                        div.confirm_delete.alert.no_border_top(ng-switch-when="delete")
-                            h3.alert_title Delete a document
-                            p Are you sure you want to delete the document above?
-                            div.button_container
-                                button.float.btn(ng-click='cancel()') Cancel
-                                button.float.btn(ng-click='deleteDoc($index)') Delete
-                        div.update_form_container.alert.no_border_top(ng-switch-when="update")
-                            h3.alert_title Update a document
-                            div.doc_form_container(ng-model="form", ng-include='', src="'partials/doc_form_field'", onload="pushScope(documents[$index])")
-
-                            div.button_container
-                                button.float.btn(ng-click='cancel()') Cancel
-                                button.float.btn(ng-click='updateDoc()') Update
+                unless isReadOnlyMode
+                  tr(ng-switch-when="true")
+                      td.op(colspan="{{document.length+1}}", class="op-{{$index}}", ng-switch="", on="operation")
+                          div.confirm_delete.alert.no_border_top(ng-switch-when="delete")
+                              h3.alert_title Delete a document
+                              p Are you sure you want to delete the document above?
+                              div.button_container
+                                  button.float.btn(ng-click='cancel()') Cancel
+                                  button.float.btn(ng-click='deleteDoc($index)') Delete
+                          div.update_form_container.alert.no_border_top(ng-switch-when="update")
+                              h3.alert_title Update a document
+                              div.doc_form_container(ng-model="form", ng-include='', src="'partials/doc_form_field'", onload="pushScope(documents[$index])")
+  
+                              div.button_container
+                                  button.float.btn(ng-click='cancel()') Cancel
+                                  button.float.btn(ng-click='updateDoc()') Update
 
 
         div.link_previous_next(ng-switch="", on="skip > 0")

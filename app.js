@@ -3,7 +3,8 @@ module.exports = function(config) {
     // Import
     var express = require('express'),
         routes = require('./routes'),
-        api = require('./routes/api')(config);
+        api = require('./routes/api')(config),
+        isReadOnlyMode = false;
 
 
     var app = module.exports = express();
@@ -17,6 +18,12 @@ module.exports = function(config) {
         }
         process.exit(1);
     })
+    
+    if(typeof(config.isReadOnlyMode) !== "undefined")
+    {
+      isReadOnlyMode = config.isReadOnlyMode;
+    }
+    config.isReadOnlyMode = isReadOnlyMode;
 
     // Configuration
     app.configure(function(){
@@ -36,7 +43,8 @@ module.exports = function(config) {
         app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
     });
 
-    // Home 
+    // Home
+    routes.config(config); 
     app.get('/', routes.index);
     // Templates
     app.get('/partials/:name', routes.partials);
@@ -44,28 +52,39 @@ module.exports = function(config) {
     // Get a list of databases and tables
     app.get('/api/databases/tables', api.databasesAndTables);
     // Add a database
-    app.post('/api/database/add', api.databaseAdd);
+    if(!isReadOnlyMode) {
+      app.post('/api/database/add', api.databaseAdd);
+    }
     // Add a table
     app.get('/api/databases', api.databases);
-    app.post('/api/table/add', api.tableAdd);
+    if(!isReadOnlyMode) {
+      app.post('/api/table/add', api.tableAdd);
+    }
     // Delete a database
-    app.post('/api/database/delete', api.databaseDelete);
-    // Delete a table 
-    app.post('/api/table/delete', api.tableDelete);
-    app.post('/api/table/empty', api.tableEmpty);
+    if(!isReadOnlyMode) {
+      app.post('/api/database/delete', api.databaseDelete);
+    }
+    // Delete a table
+    if(!isReadOnlyMode) { 
+      app.post('/api/table/delete', api.tableDelete);
+      app.post('/api/table/empty', api.tableEmpty);
+    }
 
     app.get('/api/table', api.table);
     app.get('/api/table/list/:order/:skip/:limit', api.table);
     app.get('/api/export/table', api.exportTable);
-    app.post('/api/import/table', api.importTable);
+    
+    if(!isReadOnlyMode) {
+      app.post('/api/import/table', api.importTable);
+      
+      app.post('/api/doc/delete', api.docDelete);
+      app.post('/api/doc/update', api.docUpdate);
+      app.post('/api/doc/insert', api.docInsert);
 
-    app.post('/api/doc/delete', api.docDelete);
-    app.post('/api/doc/update', api.docUpdate);
-    app.post('/api/doc/insert', api.docInsert);
-
-    app.post('/api/field/delete', api.fieldDelete);
-    app.post('/api/field/rename', api.fieldRename);
-    app.post('/api/field/add', api.fieldAdd);
+      app.post('/api/field/delete', api.fieldDelete);
+      app.post('/api/field/rename', api.fieldRename);
+      app.post('/api/field/add', api.fieldAdd);
+    }
 
     // Redirect all others to the index
     // A 404 page is probably a better move
